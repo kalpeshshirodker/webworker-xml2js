@@ -2,8 +2,14 @@ importScripts('../scripts/sax.js');
 importScripts('../scripts/assure.js');
 self.onmessage = function(e){
 	var serializedData = e.data;	
-	var x2jc = new xml2jsconverter();
-	var p = x2jc.parse(serializedData);
+	var p, x2jc;
+	
+	//replace cdata
+	serializedData = serializedData.replace(/<!--\[/g, "<![");
+	serializedData = serializedData.replace(/\]\]-->/g, "]]>");
+	
+	x2jc = new xml2jsconverter();
+	p = x2jc.parse(serializedData);
 	p.done(function(data){
 		//handle progress information
 		self.postMessage({
@@ -22,8 +28,7 @@ self.onmessage = function(e){
 
 var xml2jsconverter = function(){	
 	this.data_array = [];
-	this.attributes = {};
-	this.xmlnodes = [];
+	this.cdataText = [];
 	
 	this.promise = new assure();
 	
@@ -56,6 +61,9 @@ x2jproto.doParse = function(xmlstring){
 	parser = sax.parser(strict);
 	parser.onerror = me.saxOnError.bind(me)
 	parser.ontext = me.saxOnText.bind(me);
+	parser.onopencdata = me.saxOnOpenCData.bind(me);
+	parser.oncdata = me.saxOnCData.bind(me);
+	parser.onclosecdata = me.saxOnCloseCData.bind(me);
 	parser.onopentag = me.saxOnOpenTag.bind(me);
 	parser.onclosetag = me.saxOnCloseTag.bind(me);	
 	parser.onend = me.saxOnEnd.bind(me);
@@ -105,11 +113,29 @@ x2jproto.saxOnCloseTag = function(node){
 		}
 	}
 }
-x2jproto.saxOnText = function(text){
-	var lastNode = this.getLastNode();
+x2jproto.saxOnText = function(text){	
 	if(text.trim()){
+		var lastNode = this.getLastNode();
 		lastNode[this.textChar] = text.trim();
 	}
+}
+x2jproto.saxOnCData = function(cdata){
+	if(cdata && cdata.trim()){
+		this.cdataText = [cdata.trim()];
+	}
+}
+x2jproto.saxOnOpenCData = function(e){
+	this.cdataText = null;
+	this.cdataText = [];
+}
+x2jproto.saxOnCloseCData = function(e){
+	if(this.cdataText && this.cdataText.length > 0){
+		var lastNode = this.getLastNode();
+		lastNode[this.textChar] = this.cdataText.join(' ');
+	}
+	
+	this.cdataText = null;
+	this.cdataText = [];
 }
 x2jproto.saxOnEnd = function(){
 	this.showProgress('Parsing complete.');
