@@ -27,9 +27,6 @@ self.onmessage = function(e){
 
 var xml2jsconverter = function(){	
 	this.data_array = [];
-	this.attributes = {};
-	this.xmlnodes = [];
-	this.level = 0;
 	this.cdataText = [];
 	
 	this.textChar = "#";
@@ -104,7 +101,6 @@ x2jproto.saxOnText = function(text){
 	}
 }
 x2jproto.saxOnCData = function(cdata){
-	debugger
 	if(cdata && cdata.trim()){
 		this.cdataText = [cdata.trim()];
 	}
