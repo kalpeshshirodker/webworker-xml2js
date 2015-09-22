@@ -6,6 +6,10 @@ self.onmessage = function(e){
 	
 	var x2jc = new xml2jsconverter();
 	try{
+		//replace cdata
+		serializedData = serializedData.replace(/<!--\[/g, "<![");
+		serializedData = serializedData.replace(/\]\]-->/g, "]]>");
+	
 		var jsonArray = x2jc.parse(serializedData);
 		var JSON_string = JSON.stringify(jsonArray);
 		self.postMessage({
@@ -26,6 +30,7 @@ var xml2jsconverter = function(){
 	this.attributes = {};
 	this.xmlnodes = [];
 	this.level = 0;
+	this.cdataText = [];
 	
 	this.textChar = "#";
 	this.attributesChar = "@";
@@ -39,6 +44,9 @@ x2jproto.parse = function(xmlstring){
 	parser = sax.parser(strict);
 	parser.onerror = me.saxOnError.bind(me)
 	parser.ontext = me.saxOnText.bind(me);
+	parser.onopencdata = me.saxOnOpenCData.bind(me);
+	parser.oncdata = me.saxOnCData.bind(me);
+	parser.onclosecdata = me.saxOnCloseCData.bind(me);
 	parser.onopentag = me.saxOnOpenTag.bind(me);
 	parser.onclosetag = me.saxOnCloseTag.bind(me);	
 	parser.onend = me.saxOnEnd.bind(me);
@@ -94,6 +102,25 @@ x2jproto.saxOnText = function(text){
 	if(text.trim()){
 		lastNode[this.textChar] = text.trim();
 	}
+}
+x2jproto.saxOnCData = function(cdata){
+	debugger
+	if(cdata && cdata.trim()){
+		this.cdataText = [cdata.trim()];
+	}
+}
+x2jproto.saxOnOpenCData = function(e){
+	this.cdataText = null;
+	this.cdataText = [];
+}
+x2jproto.saxOnCloseCData = function(e){
+	if(this.cdataText && this.cdataText.length > 0){
+		var lastNode = this.getLastNode();
+		lastNode[this.textChar] = this.cdataText.join(' ');
+	}
+	
+	this.cdataText = null;
+	this.cdataText = [];
 }
 x2jproto.saxOnEnd = function(){
 	self.postMessage({
