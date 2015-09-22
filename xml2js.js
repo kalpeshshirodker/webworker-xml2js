@@ -1,11 +1,9 @@
 importScripts('../scripts/sax.js');
+importScripts('../scripts/assure.js');
 self.onmessage = function(e){
-	var serializedData = e.data;
-	var parentNode;
-	var level = -1;
-	
+	var serializedData = e.data;	
 	var x2jc = new xml2jsconverter();
-	try{
+	/*try{
 		var jsonArray = x2jc.parse(serializedData);
 		var JSON_string = JSON.stringify(jsonArray);
 		self.postMessage({
@@ -18,14 +16,30 @@ self.onmessage = function(e){
 			error : e.message,
 			status : 'error'
 		});
-	}
+	}*/
+	var p = x2jc.parse(serializedData);
+	p.done(function(data){
+		//handle progress information
+		self.postMessage({
+			eventType : data.eventType,
+			obj : data.obj,
+			status : data.status
+		});
+	});
+	p.fail(function(data){
+		self.postMessage({
+			obj : data.obj,
+			status : data.status
+		});
+	});
 }
 
 var xml2jsconverter = function(){	
 	this.data_array = [];
 	this.attributes = {};
 	this.xmlnodes = [];
-	this.level = 0;
+	
+	this.promise = new assure();
 	
 	this.textChar = "#";
 	this.attributesChar = "@";
@@ -34,6 +48,23 @@ var xml2jsconverter = function(){
 
 var x2jproto = xml2jsconverter.prototype;
 x2jproto.parse = function(xmlstring){
+	var me = this;
+	var p = this.promise = new assure();
+	setTimeout(function() {
+        var JSON_Array, JSON_string;
+		me.showProgress('Process Start');		
+		JSON_Array = me.doParse(xmlstring);
+		me.showProgress('Process Complete');
+		JSON_string = JSON.stringify(JSON_Array);
+		p.resolve({
+			eventType : 'resolve',
+			status : 'success',
+			obj : JSON_string
+		});
+    }, 1000);
+	return p;
+}
+x2jproto.doParse = function(xmlstring){
 	var me = this;
 	var strict = true, // set to false for html-mode
 	parser = sax.parser(strict);
@@ -49,8 +80,7 @@ x2jproto.parse = function(xmlstring){
 }
 
 x2jproto.saxOnOpenTag = function(node){
-	var children = this.childrenChar;
-	this.level++;
+	var children = this.childrenChar;;
 	var curNode = {
 		name : node.name,		
 		isPopulated : false,
@@ -96,13 +126,10 @@ x2jproto.saxOnText = function(text){
 	}
 }
 x2jproto.saxOnEnd = function(){
-	self.postMessage({
-		msg : 'Parsing complete.',
-		status : 'success'
-	});
+	this.showProgress('Parsing complete.');
 }
 x2jproto.saxOnError = function(e){
-	self.postMessage({
+	this.promise.reject({
 		error : e,
 		status : 'error'
 	});
@@ -132,4 +159,14 @@ x2jproto.getLastNode = function(){
 		}
 	}
 	return lastNode;
+}
+x2jproto.showProgress = function(msg){
+	//assure.js doesnt support promise
+	/*if(msg){
+		this.promise.progress({
+			eventType : 'progress',
+			status : 'progress',
+			obj : msg
+		});
+	}*/
 }
