@@ -68,16 +68,9 @@ x2jproto.saxOnOpenTag = function(node){
 		}
 	}
 	
-	/////////////////
-	var childNodes;
-	var prevNode, lastNode = this.getLastNode();
+	var lastNode = this.getLastNode();
 	if(lastNode && lastNode[children]){
-		if(lastNode[children].length > 0){
-			lastNode[children].push(curNode);			
-		}
-		else{
-			lastNode[children].push(curNode);
-		}
+		lastNode[children].push(curNode);		
 	}
 	else{
 		this.data_array.push(curNode);
@@ -97,8 +90,6 @@ x2jproto.saxOnCloseTag = function(node){
 		}
 	}
 }
-x2jproto.saxOnAttribute = function(attr){
-}
 x2jproto.saxOnText = function(text){
 	var lastNode = this.getLastNode();
 	if(text.trim()){
@@ -106,6 +97,10 @@ x2jproto.saxOnText = function(text){
 	}
 }
 x2jproto.saxOnEnd = function(){
+	self.postMessage({
+		msg : 'Parsing complete.',
+		status : 'success'
+	});
 }
 x2jproto.saxOnError = function(e){
 	self.postMessage({
@@ -129,7 +124,6 @@ x2jproto.getLastNode = function(){
 				lastNode = childNodes[childNodes.length - 1];				
 			}
 			else{
-				//lastNode = prevNode;
 				break;
 			}
 		}
