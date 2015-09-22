@@ -3,20 +3,6 @@ importScripts('../scripts/assure.js');
 self.onmessage = function(e){
 	var serializedData = e.data;	
 	var x2jc = new xml2jsconverter();
-	/*try{
-		var jsonArray = x2jc.parse(serializedData);
-		var JSON_string = JSON.stringify(jsonArray);
-		self.postMessage({
-			obj : JSON_string,
-			status : 'success'
-		});
-	}
-	catch(e){
-		self.postMessage({
-			error : e.message,
-			status : 'error'
-		});
-	}*/
 	var p = x2jc.parse(serializedData);
 	p.done(function(data){
 		//handle progress information
