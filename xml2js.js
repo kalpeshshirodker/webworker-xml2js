@@ -15,7 +15,7 @@ self.onmessage = function(e){
 	}
 	catch(e){
 		self.postMessage({
-			error : e,
+			error : e.message,
 			status : 'error'
 		});
 	}
@@ -35,13 +35,12 @@ var xml2jsconverter = function(){
 var x2jproto = xml2jsconverter.prototype;
 x2jproto.parse = function(xmlstring){
 	var me = this;
-	var strict = true; // set to false for html-mode
+	var strict = true, // set to false for html-mode
 	parser = sax.parser(strict);
-	parser.onerror = me.saxOnError.bind(me);
+	parser.onerror = me.saxOnError.bind(me)
 	parser.ontext = me.saxOnText.bind(me);
 	parser.onopentag = me.saxOnOpenTag.bind(me);
-	parser.onclosetag = me.saxOnCloseTag.bind(me);
-	parser.onattribute = me.saxOnAttribute.bind(me);
+	parser.onclosetag = me.saxOnCloseTag.bind(me);	
 	parser.onend = me.saxOnEnd.bind(me);
 	
 	parser.write(xmlstring).close();
