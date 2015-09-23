@@ -9,7 +9,7 @@ self.onmessage = function(e){
 	serializedData = serializedData.replace(/<!--\[/g, "<![");
 	serializedData = serializedData.replace(/\]\]-->/g, "]]>");
 	
-	x2jc = new xml2jsconverter();
+	x2jc = new xml2json.converter();
 	p = x2jc.parse(serializedData);
 	
 	//TODO:handle progress information
@@ -27,4 +27,3 @@ self.onmessage = function(e){
 		});
 	});
 }
-
