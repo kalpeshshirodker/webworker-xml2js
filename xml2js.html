@@ -1,0 +1,117 @@
+<html>
+<head>
+	<style>
+		pre {outline: 1px solid #ccc; padding: 5px; margin: 5px; }
+		.string { color: orange; }
+		.number { color: darkorange; }
+		.boolean { color: blue; }
+		.null { color: magenta; }
+		.key { color: dodgerblue; }
+
+	</style>
+	<script src="..\..\scripts\jquery-1.11.1.min.js"></script>
+	<script>
+		function xml2js(){
+			var targetid = 'divid';
+			var w = new Worker("src/xml2json-worker.js");
+			w.onmessage = function(e){
+				var data = e.data;
+				if(data && data.obj){
+					//success
+					console.log(data.obj);
+					var jsonString = data.obj;
+					var jsonObj = JSON.parse(jsonString);
+					
+					var j = syntaxHighlight(JSON.stringify(jsonObj, undefined, 4));
+					$('#jsondata').html(j);
+					/*var jsonData = document.getElementById('jsondata');
+					jsonData.innerHTML = j;*/
+				}
+				if(data && data.msg){
+					//success
+					console.log(data.msg);
+				}
+			};
+			
+
+			var html = document.getElementById(targetid).cloneNode(true);
+			
+			var oSerializer = new XMLSerializer();
+			var sXML = oSerializer.serializeToString(html);
+			w.postMessage(sXML);
+			console.log('work started');
+			
+		}
+		$(document).ready(function(){		
+			xml2js();
+		});
+		
+		function syntaxHighlight(json) {
+			if (typeof json != 'string') {
+				 json = JSON.stringify(json, undefined, 2);
+			}
+			json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+			return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+				var cls = 'number';
+				if (/^"/.test(match)) {
+					if (/:$/.test(match)) {
+						cls = 'key';
+					} else {
+						cls = 'string';
+					}
+				} else if (/true|false/.test(match)) {
+					cls = 'boolean';
+				} else if (/null/.test(match)) {
+					cls = 'null';
+				}
+				return '<span class="' + cls + '">' + match + '</span>';
+			});
+		}
+	</script>
+</head>
+<body >
+	<div id="divid">
+		<div><![CDATA[
+				this is a cdata block,
+				a very large cdata block if you will
+			]]></div><div><![CDATA[
+				Another CDATA block
+			]]> </div></div>
+	<!--<div id="divid">
+		<div>
+			<div>
+				<div><![CDATA[node1.1]]></div>
+			</div>
+			<div>node1.2</div>
+		</div>
+		<div>node2</div>
+		<div>node3</div>
+		<div>node4
+			<div>
+				<div>node4.1</div>
+			</div>
+			<div>node4.2</div>
+		</div>
+	</div>-->
+	
+	<!--<div id="divid">
+		<div>
+			<div>node1</div>
+			<div>node1.2</div>
+		</div>
+		<div>
+			<div>node1</div>
+			<div>node1.2</div>
+		</div>
+	</div>-->
+	<!--<div id="divid" class="dee">
+		<div>
+			<div id="node1">node1</div>
+			<div id="node1.2">node1.2</div>
+		</div>
+		<div>
+			<div id="node2">node2</div>
+		</div>
+	</div>-->
+	<pre id="jsondata"></div>
+</body>
