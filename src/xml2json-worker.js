@@ -1,5 +1,4 @@
-importScripts('../scripts/sax.js');
-importScripts('../scripts/assure.js');
+importScripts('../lib/sax.js', '../lib/assure.js');
 importScripts('xml2json-streaming.js');
 self.onmessage = function(e){
 	var serializedData = e.data;	
